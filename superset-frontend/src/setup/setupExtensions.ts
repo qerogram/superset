@@ -18,4 +18,35 @@
  */
 
 // For individual deployments to add custom overrides
-export default function setupExtensions() {}
+export default function setupExtensions() {
+  // Extensions can be added here
+  
+  // Load Chatbot Extension if enabled
+  if (typeof window !== 'undefined') {
+    // Check if chatbot is enabled via localStorage (user preference)
+    const isChatbotEnabled = localStorage.getItem('enable_chatbot') !== 'false';
+    
+    if (isChatbotEnabled) {
+      // Load Chatbot Plugin
+      setTimeout(() => {
+        import('../../plugins/plugin-ui-chatbot/src/components/Chatbot').then(
+          ({ default: Chatbot }) => {
+          const React = require('react');
+          const ReactDOM = require('react-dom');
+          
+          let container = document.getElementById('superset-chatbot-extension');
+          if (!container) {
+            container = document.createElement('div');
+            container.id = 'superset-chatbot-extension';
+            document.body.appendChild(container);
+          }
+          
+          ReactDOM.render(React.createElement(Chatbot), container);
+          console.log('Chatbot plugin loaded');
+        }).catch(err => {
+          console.error('Failed to load chatbot plugin:', err);
+        });
+      }, 1000);
+    }
+  }
+}

@@ -29,4 +29,22 @@ export default function setupPlugins() {
   getChartControlPanelRegistry().registerValue('separator', Separator);
 
   setupPluginsExtra();
+  
+  // Load Chatbot Plugin if enabled
+  // The plugin can be enabled by:
+  // 1. Setting ENABLE_CHATBOT: true in window object
+  // 2. Setting REACT_APP_ENABLE_CHATBOT=true in environment
+  // 3. Adding to FEATURE_FLAGS in superset_config.py
+  if (typeof window !== 'undefined') {
+    const isChatbotEnabled = 
+      (window as any).ENABLE_CHATBOT === true ||
+      process.env.REACT_APP_ENABLE_CHATBOT === 'true' ||
+      localStorage.getItem('enable_chatbot') === 'true';
+    
+    if (isChatbotEnabled) {
+      // For now, skip plugin loading to avoid build errors
+      // The chatbot will be mounted directly via App.tsx
+      console.log('Chatbot enabled - will be mounted via App.tsx');
+    }
+  }
 }

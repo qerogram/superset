@@ -1,0 +1,80 @@
+#
+# Docker Compose for building ALL services for ECR
+# Usage: docker-compose -f docker-compose-build-all.yml build
+#
+
+x-superset-volumes:
+  &superset-volumes
+  - ./docker:/app/docker
+  - ./superset:/app/superset
+  - ./superset-frontend:/app/superset-frontend
+  - superset_home:/app/superset_home
+  - ./tests:/app/tests
+
+x-common-build: &common-build
+  context: .
+  dockerfile: Dockerfile
+  target: ${SUPERSET_BUILD_TARGET:-dev}  # Use 'dev' to include frontend sources
+  platforms:
+    - linux/arm64
+  cache_from:
+    - apache/superset-cache:3.10-slim-trixie
+  args:
+    DEV_MODE: "true"
+    INCLUDE_CHROMIUM: ${INCLUDE_CHROMIUM:-false}
+    INCLUDE_FIREFOX: ${INCLUDE_FIREFOX:-false}
+    BUILD_TRANSLATIONS: ${BUILD_TRANSLATIONS:-true}
+
+services:
+  superset:
+    build:
+      <<: *common-build
+    image: superset-superset:latest
+    container_name: superset_app
+
+  superset-init:
+    build:
+      <<: *common-build
+    image: superset-superset-init:latest
+    container_name: superset_init
+
+  superset-worker:
+    build:
+      <<: *common-build
+    image: superset-superset-worker:latest
+    container_name: superset_worker
+
+  superset-worker-beat:
+    build:
+      <<: *common-build
+    image: superset-superset-worker-beat:latest
+    container_name: superset_worker_beat
+
+  # Frontend dev server (if needed)
+  superset-node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: superset-node
+    image: superset-superset-node:latest
+    container_name: superset_node
+
+  # Websocket service (using pre-built image from superset-websocket directory)
+  superset-websocket:
+    build:
+      context: ./superset-websocket
+      dockerfile: Dockerfile
+    image: superset-superset-websocket:latest
+    container_name: superset_websocket
+
+  # Nginx with custom config
+  nginx:
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    image: superset-nginx:latest
+    container_name: superset_nginx
+
+volumes:
+  superset_home:
+    external: false

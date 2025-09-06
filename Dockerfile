@@ -241,6 +241,9 @@ RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
 # Install the superset package
 RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
     uv pip install -e .
+# Install PostgreSQL and MySQL drivers for production
+RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
+    uv pip install psycopg2-binary pymysql
 RUN python -m compileall /app/superset
 
 USER superset
